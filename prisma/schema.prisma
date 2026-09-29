@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 1. Users & Monetization
+model User {
+  id               String        @id @default(uuid())
+  email            String        @unique
+  name             String?
+  isPremium        Boolean       @default(false)
+  stripeCustomerId String?       
+  createdAt        DateTime      @default(now())
+  
+  sessions         TestSession[] 
+}
+
+// 2. States (DMV rules vary by state)
+model State {
+  id          String     @id @default(uuid())
+  code        String     @unique 
+  name        String     
+  questions   Question[] 
+}
+
+// 3. Questions & AI Explanations
+model Question {
+  id             String   @id @default(uuid())
+  text           String    
+  imageUrl       String?  
+  aiExplanation  String?  
+  
+  stateId        String
+  state          State    @relation(fields: [stateId], references: [id])
+  
+  answers        Answer[] 
+  userAnswers    UserAnswer[] 
+}
+
+// 4. Answer Options
+model Answer {
+  id          String   @id @default(uuid())
+  text        String
+  isCorrect   Boolean  @default(false)
+  
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id])
+  
+  userAnswers UserAnswer[]
+}
+
+// 5. Learning Progress (Analytics for the student)
+model TestSession {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  score       Int          @default(0)
+  completedAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  answers     UserAnswer[] 
+}
+
+// 6. Detailed User Answers (For Spaced Repetition)
+model UserAnswer {
+  id            String      @id @default(uuid())
+  sessionId     String
+  session       TestSession @relation(fields: [sessionId], references: [id])
+  
+  questionId    String
+  question      Question    @relation(fields: [questionId], references: [id])
+  
+  answerId      String
+  answer        Answer      @relation(fields: [answerId], references: [id])
+  
+  isCorrect     Boolean     
+  createdAt     DateTime    @default(now())
+}
