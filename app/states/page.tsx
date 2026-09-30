@@ -1,16 +1,12 @@
 import Link from "next/link";
+import { prisma } from "../../lib/prisma";
 
-// Mock data. We will fetch this from PostgreSQL later.
-const popularStates = [
-  { code: "PA", name: "Pennsylvania", icon: "🔔" },
-  { code: "NY", name: "New York", icon: "🗽" },
-  { code: "CA", name: "California", icon: "🌴" },
-  { code: "TX", name: "Texas", icon: "🤠" },
-  { code: "FL", name: "Florida", icon: "🏖️" },
-  { code: "NJ", name: "New Jersey", icon: "🎢" },
-];
+export default async function StatesPage() {
+  // Звертаємося до бази даних Neon і тягнемо всі штати
+  const dbStates = await prisma.state.findMany({
+    orderBy: { name: 'asc' }
+  });
 
-export default function StatesPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-8">
       <div className="max-w-4xl mx-auto">
@@ -24,14 +20,15 @@ export default function StatesPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {popularStates.map((state) => (
+          {/* Малюємо картки на основі реальних даних з БД */}
+          {dbStates.map((state) => (
             <Link
               key={state.code}
               href={`/test/${state.code.toLowerCase()}`}
               className="flex items-center p-6 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-blue-400 transition group"
             >
               <span className="text-4xl mr-4 group-hover:scale-110 transition-transform">
-                {state.icon}
+                📍
               </span>
               <div>
                 <h2 className="text-xl font-bold text-slate-900">{state.name}</h2>
